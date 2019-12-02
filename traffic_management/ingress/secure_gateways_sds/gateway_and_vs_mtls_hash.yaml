@@ -1,0 +1,44 @@
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+ name: mygateway
+spec:
+ selector:
+   istio: ingressgateway # use istio default ingress gateway
+ servers:
+ - port:
+     number: 443
+     name: https
+     protocol: HTTPS
+   tls:
+     mode: MUTUAL
+     credentialName: "httpbin-credential" # must be the same as secret
+     subjectAltNames: ["test1"]
+     verifyCertificateHash: ["F4:5C:26:C4:E9:5B:22:6D:62:0C:80:0E:E6:9E:D9:A7:B3:69:C9:30:44:F7:8B:2B:2B:2D:C9:36:8C:99:E1:51"]
+     #verifyCertificateHash: ["F4:5C:26:C4:E9:5B:22:6D:62:0C:80:0E:E6:9E:D9:A7:B3:69:C9:30:44:F7:8B:2B:2B:2D:C9:36:8C:99:E1:52"]
+   hosts:
+   - "httpbin.example.com"
+
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: httpbin
+spec:
+  hosts:
+  - "httpbin.example.com"
+  gateways:
+  - mygateway
+  http:
+  - match:
+    - uri:
+        prefix: /status
+    - uri:
+        prefix: /delay
+    route:
+    - destination:
+        port:
+          number: 8000
+        host: httpbin
+
